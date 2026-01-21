@@ -1,0 +1,14 @@
+.DS_Store
+.env
+# wg-show
+__pycache__
+.venv
+.python-version
+pyproject.toml
+*.log
+*.err
+# grafana
+data
+# immich
+library
+postgres

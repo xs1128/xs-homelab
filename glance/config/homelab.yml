@@ -1,0 +1,461 @@
+- name: Homelab
+  columns:
+    - size: full
+      widgets:
+      - type: custom-api
+        title: What's Up Docker?
+        cache: 1h
+        url: http://${WUD_URL}/api/containers/
+        method: GET
+        template: |
+          {{/* You are using WUD Monitor v2.0*/}}
+          <style>
+            .vertical-separator {
+              width: 3px;
+              height: 3.5rem;
+              margin: 0 1rem;
+                border-radius: 2px;
+                align-self: center;
+                background: linear-gradient(
+                  to bottom,
+                  transparent,
+                  rgba(255, 255, 255, 0.05) 20%,
+                  rgba(255, 255, 255, 0.05) 80%,
+                  transparent
+                );
+              }
+
+              .container-info {
+                display: flex;
+                align-items: flex-start;
+                justify-content: space-evenly;
+                margin: 1rem 0;
+                width: 100%;
+              }
+
+              .info-column {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                min-width: 4rem;
+              }
+
+              .info-label {
+                font-size: 1.20rem;
+                opacity: 0.9;
+                text-align: center;
+              }
+
+              .info-value {
+                font-size: 1.4rem;
+                margin-top: 0.25rem;
+                text-align: center;
+              }
+
+              .info-count {
+                font-size: 1.45rem !important;
+              }
+
+              /* Container Size: Full */
+              @container widget (min-width: 550px) {
+                .container-info {
+                  justify-content: flex-start;
+                  gap: 2rem;
+                  padding: 0.5rem;
+                }
+
+                .vertical-separator {
+                  align-self: flex-start;
+                  margin: 0 2rem;
+                }
+
+                .info-column {
+                  align-items: flex-start;
+                }
+
+                .info-label .info-value {
+                  text-align: left;
+                }
+              }
+            </style>
+
+            {{/* ======================= MENU ======================= */}}
+            {{ $showInfo := true }}         {{/* Show the overall info summary (Updates, Total, Running) */}}
+            {{ $showList := true }}         {{/* Show the container list section */}}
+            {{ $showAll := true }}         {{/* Show all containers (not just ones with updates) */}}
+            {{ $showUpdateKind := true }}   {{/* Toggle this to false to hide the Update Kind row */}}
+            {{ $showUpdateTypes := true }} {{/* Toggle this to false to hide the Update Types breakdown */}}
+            {{ $showLocalVersion := true }} {{/* Toggle this to true to show local version instead of update status */}}
+            {{ $hasUpdates := true }}      {{/* Set this to true to hide up-to-date message */}}
+
+            {{ $containers := .JSON.Array "" }}
+            {{ $total := len $containers }}
+            {{ $updates := 0 }}
+            {{ $running := 0 }}
+
+            {{ range $containers }}
+              {{ if .Bool "updateAvailable" }}
+                {{ $updates = add $updates 1 }}
+              {{ end }}
+              {{ if eq (.String "status") "running" }}
+                {{ $running = add $running 1 }}
+              {{ end }}
+            {{ end }}
+
+            {{ if $showInfo }}
+              <div class="container-info">
+                <div class="info-column">
+                  <div class="info-label info-count">Updates</div>
+                  <div class="info-value info-count">{{ $updates }}</div>
+                </div>
+
+                <div class="vertical-separator"></div>
+
+                <div class="info-column">
+                  <div class="info-label info-count">Total</div>
+                  <div class="info-value info-count">{{ $total }}</div>
+                </div>
+
+                <div class="vertical-separator"></div>
+
+                <div class="info-column">
+                  <div class="info-label info-count">Running</div>
+                  <div class="info-value info-count">{{ $running }}</div>
+                </div>
+              </div>
+              {{ if $showUpdateTypes }}
+              <div class="flex items-center text-center">
+                {{ $majorCount := 0 }}
+                {{ $minorCount := 0 }}
+                {{ $patchCount := 0 }}
+                {{ $unknownCount := 0 }}
+                {{ range $containers }}
+                  {{ if .Bool "updateAvailable" }}
+                    {{ $kind := .String "updateKind.semverDiff" }}
+                    {{ if eq $kind "major" }}
+                      {{ $majorCount = add $majorCount 1 }}
+                    {{ else if eq $kind "minor" }}
+                      {{ $minorCount = add $minorCount 1 }}
+                    {{ else if eq $kind "patch" }}
+                      {{ $patchCount = add $patchCount 1 }}
+                    {{ else }}
+                      {{ $unknownCount = add $unknownCount 1 }}
+                    {{ end }}
+                  {{ end }}
+                {{ end }}
+                <div class="flex-1">
+                  <div class="size-h3">{{ $majorCount }}</div>
+                  <div class="size-h6">MAJOR</div>
+                </div>
+                <div class="vertical-separator" style="width: 2px; margin: 0 0.25rem;"></div>
+                <div class="flex-1">
+                  <div class="size-h3">{{ $minorCount }}</div>
+                  <div class="size-h6">MINOR</div>
+                </div>
+                <div class="vertical-separator" style="width: 2px; margin: 0 0.25rem;"></div>
+                <div class="flex-1">
+                  <div class="size-h3">{{ $patchCount }}</div>
+                  <div class="size-h6">PATCH</div>
+                </div>
+                <div class="vertical-separator" style="width: 2px; margin: 0 0.25rem;"></div>
+                <div class="flex-1">
+                  <div class="size-h3">{{ $unknownCount }}</div>
+                  <div class="size-h6">UNKNOWN</div>
+                </div>
+              </div>
+              {{ end }}
+            {{ end }}
+
+            {{ if $showList }}
+              <div style="height: 10px;"></div>
+              <ul class="list list-gap-10 collapsible-container" data-collapse-after="3">
+                {{ range $index, $container := $containers }}
+                  {{ if $container.Bool "updateAvailable" }}
+                    {{ $hasUpdates = true }}
+                    <li>
+                      <div class="flex flex-column">
+                        {{ $registryName := $container.String "image.registry.name" }}
+                        {{ $imageName := $container.String "image.name" }}
+                        {{ $hubSource := "#" }}
+                        {{ if eq $registryName "hub.public" }}
+                          {{ $hubSource = concat "https://hub.docker.com/r/" $imageName }}
+                        {{ else if eq $registryName "ghcr.public" }}
+                          {{ $hubSource = concat "https://github.com/" $imageName }}
+                        {{ end }}
+
+                        <div class="size-h4">
+                          {{ if eq ($container.String "status") "running" }}
+                            <span class="status-dot color-positive">●</span>
+                          {{ else }}
+                            <span class="status-dot color-negative">●</span>
+                          {{ end }}
+                          <a class="color-highlight text-truncate" href="{{ $hubSource }}" target="_blank" rel="noreferrer">{{ $container.String "name" }}</a>
+                        </div>
+
+                        <div class="container-info">
+                          <div class="info-column">
+                            <div class="info-label">Watcher</div>
+                            <div class="info-value">{{ $container.String "watcher" }}</div>
+                          </div>
+
+                          <div class="vertical-separator"></div>
+
+                          {{ if $showLocalVersion }}
+                            <div class="info-column">
+                              <div class="info-label">Version</div>
+                              <div class="info-value">
+                          {{ $localValue := $container.String "updateKind.localValue" }}
+                          {{ if ge (len $localValue) 7 }}
+                            {{ $isSha256 := eq (slice $localValue 0 7) "sha256:" }}
+                            {{ if $isSha256 }}
+                              {{ $shortDigest := slice $localValue 7 11 }}
+                              <span>dig: {{ $shortDigest }}</span>
+                            {{ else }}
+                              <span>{{ $localValue }}</span>
+                            {{ end }}
+                            {{ else }}
+                              <span>{{ $localValue }}</span>
+                            {{ end }}
+                              </div>
+                            </div>
+                          {{ else }}
+                            <div class="info-column">
+                              <div class="info-label">Update</div>
+                              <div class="info-value">
+                                <span class="color-positive">Available</span>
+                              </div>
+                            </div>
+                          {{ end }}
+                          {{ if $showUpdateKind }}
+                            <div class="vertical-separator"></div>
+                            {{ $updateKind := $container.String "updateKind.semverDiff" }}
+                            {{ if eq $updateKind "" }}
+                              {{ $updateKind = "Unknown" }}
+                            {{ end }}
+                            {{ $tagValue := $container.String "updateKind.remoteValue" }}
+                            {{ if eq $tagValue "" }}
+                              {{ $tagValue = "Unknown" }}
+                            {{ end }}
+                            <div class="info-column">
+                              <div class="info-label">{{ $updateKind }}</div>
+                              <div class="info-value">
+                                {{ if ge (len $tagValue) 7 }}
+                                  {{ $isSha256 := eq (slice $tagValue 0 7) "sha256:" }}
+                                  {{ if $isSha256 }}
+                                    {{ $shortDigest := slice $tagValue 7 11 }}
+                                    <span>dig: {{ $shortDigest }}</span>
+                                  {{ else }}
+                                    <span>{{ $tagValue }}</span>
+                                  {{ end }}
+                                  {{ else }}
+                                    <span>{{ $tagValue }}</span>
+                                  {{ end }}
+                              </div>
+                            </div>
+                          {{ end }}
+                        </div>
+                      </div>
+                    </li>
+                  {{ end }}
+                {{ end }}
+
+                {{ if not $hasUpdates }}
+                  <li class="flex items-center justify-center">
+                    <span class="color-positive size-h4">All containers are up to date!</span>
+                  </li>
+                {{ end }}
+
+                {{ if $showAll }}
+                  {{ range $index, $container := $containers }}
+                    {{ if not ($container.Bool "updateAvailable") }}
+                      <li>
+                        <div class="flex flex-column">
+                          {{ $registryName := $container.String "image.registry.name" }}
+                          {{ $imageName := $container.String "image.name" }}
+                          {{ $hubSource := "#" }}
+                          {{ if eq $registryName "hub.public" }}
+                            {{ $hubSource = concat "https://hub.docker.com/r/" $imageName }}
+                          {{ else if eq $registryName "ghcr.public" }}
+                            {{ $hubSource = concat "https://github.com/" $imageName }}
+                          {{ end }}
+
+                          <div class="size-h4">
+                            {{ if eq ($container.String "status") "running" }}
+                              <span class="status-dot color-positive">●</span>
+                            {{ else }}
+                              <span class="status-dot color-negative">●</span>
+                            {{ end }}
+                            <a class="color-highlight text-truncate" href="{{ $hubSource }}" target="_blank" rel="noreferrer">{{ $container.String "name" }}</a>
+                          </div>
+
+                          <div class="container-info">
+                            <div class="info-column">
+                              <div class="info-label">Watcher</div>
+                              <div class="info-value">{{ $container.String "watcher" }}</div>
+                            </div>
+
+                            <div class="vertical-separator"></div>
+
+                            {{ if $showLocalVersion }}
+                              <div class="info-column">
+                                <div class="info-label">Version</div>
+                                <div class="info-value">
+                                  {{ $localValue := $container.String "updateKind.localValue" }}
+                                  {{ if eq $localValue "" }}
+                                    {{ $localValue = $container.String "updatekind.remoteValue" }}
+                                    {{ if eq $localValue "" }}
+                                      {{ $imageDigest := $container.String "image.digest.repo" }}
+                                      {{ $isSha256 := eq (slice $imageDigest 0 7) "sha256:" }}
+                                      {{ if $isSha256 }}
+                                        {{ $shortDigest := slice $imageDigest 7 11 }}
+                                        <span>dig: {{ $shortDigest }}</span>
+                                      {{ else }}
+                                        <span>-</span>
+                                      {{ end }}
+                                    {{ else }}
+                                      <span>{{ $localValue }}</span>
+                                    {{ end }}
+                                  {{ else }}
+                                    {{ $isSha256 := eq (slice $localValue 0 7) "sha256:" }}
+                                    {{ if $isSha256 }}
+                                      {{ $shortDigest := slice $localValue 7 11 }}
+                                      <span>dig: {{ $shortDigest }}</span>
+                                    {{ else }}
+                                      <span>{{ $localValue }}</span>
+                                    {{ end }}
+                                  {{ end }}
+                                </div>
+                              </div>
+                            {{ else }}
+                              <div class="info-column">
+                                <div class="info-label">Update</div>
+                                <div class="info-value"><span class="color-negative">Not Found</span></div>
+                              </div>
+                            {{ end }}
+                          </div>
+                        </div>
+                      </li>
+                    {{ end }}
+                  {{ end }}
+                {{ end }}
+              </ul>
+            {{ end }}
+    - size: small
+      widgets:
+        - type: custom-api
+          title: Immich stats
+          cache: 1d
+          url: ${IMMICH_URL}/api/server/statistics
+          headers:
+            x-api-key: ${IMMICH_API_KEY}
+            Accept: application/json
+          template: |
+            <div class="flex justify-between text-center">
+              <div>
+                  <div class="color-highlight size-h3">{{ .JSON.Int "photos" | formatNumber }}</div>
+                  <div class="size-h6">PHOTOS</div>
+              </div>
+              <div>
+                  <div class="color-highlight size-h3">{{ .JSON.Int "videos" | formatNumber }}</div>
+                  <div class="size-h6">VIDEOS</div>
+              </div>
+              <div>
+                  <div class="color-highlight size-h3">{{ div (.JSON.Int "usage" | toFloat) 1073741824 | toInt | formatNumber }}GB</div>
+                  <div class="size-h6">USAGE</div>
+              </div>
+            </div>
+        - type: custom-api
+          title: "Jellyfin/Emby Stats"
+          base-url: ${JELLYFIN_URL}
+          options:
+            url: ${JELLYFIN_URL}
+            key: ${JELLYFIN_API_KEY}
+
+          template: |
+            {{ $url := .Options.StringOr "url" "" }}
+            {{ $key := .Options.StringOr "key" "" }}
+
+            {{- if or (eq $url "") (eq $key "") -}}
+            
+              <p>Error: The URL or API Key was not configured in the widget options.</p>
+              
+            {{- else -}}
+
+              {{- $requestUrl := printf "%s/emby/Items/Counts?api_key=%s" $url $key -}}
+              {{- $jellyfinData := newRequest $requestUrl | getResponse -}}
+
+              {{- if eq $jellyfinData.Response.StatusCode 200 -}}
+                <div class="flex flex-column gap-5">
+                  <div class="flex justify-between text-center">
+                    
+                    <div>
+                      <div class="color-highlight size-h3">{{ $jellyfinData.JSON.Int "MovieCount" | formatNumber }}</div>
+                      <div class="size-h5 uppercase">Movies</div>
+                    </div>
+
+                    <div>
+                      <div class="color-highlight size-h3">{{ $jellyfinData.JSON.Int "SeriesCount" | formatNumber }}</div>
+                      <div class="size-h5 uppercase">TV Shows</div>
+                    </div>
+
+                    <div>
+                      <div class="color-highlight size-h3">{{ $jellyfinData.JSON.Int "EpisodeCount" | formatNumber }}</div>
+                      <div class="size-h5 uppercase">Episodes</div>
+                    </div>
+
+                    <div>
+                      <div class="color-highlight size-h3">{{ $jellyfinData.JSON.Int "SongCount" | formatNumber }}</div>
+                      <div class="size-h5 uppercase">Songs</div>
+                    </div>
+
+                  </div>
+                </div>
+              {{- else -}}
+                <p>Failed: {{ $jellyfinData.Response.Status }}</p>
+              {{- end -}}
+            {{- end -}}
+        - type: custom-api
+          title: Wireguard Connection Status
+          cache: 1h
+          url: http://140.114.203.77:9173/network-details
+          template: |
+            {{ $hideIP := .Options.StringOr "hide_ip" "false" }}
+            <ul class="list list-gap-10 collapsible-container">
+            {{ range .JSON.Array "" }}
+              {{ $isEnabled := .String "vpn_enabled" }}
+              <li class="flex items-center gap-12">
+                <span class="color-highlight text-truncate block grow">Status</span>
+                {{ if eq $isEnabled "true" }}
+                  <div class="margin-left-auto shrink-0">
+                    <div class="monitor-site-status-icon-compact" title="Connected">
+                      <svg fill="var(--color-positive)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm3.857-9.809a.75.75 0 0 0-1.214-.882l-3.483 4.79-1.88-1.88a.75.75 0 1 0-1.06 1.061l2.5 2.5a.75.75 0 0 0 1.137-.089l4-5.5Z" clip-rule="evenodd"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="color-highlight">Connected</span>
+                {{ else }}
+                  <div class="margin-left-auto shrink-0">
+                    <div class="monitor-site-status-icon-compact" title="Disconnected">
+                      <svg fill="var(--color-negative)" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M8.485 2.495c.673-1.167 2.357-1.167 3.03 0l6.28 10.875c.673 1.167-.17 2.625-1.516 2.625H3.72c-1.347 0-2.189-1.458-1.515-2.625L8.485 2.495ZM10 5a.75.75 0 0 1 .75.75v3.5a.75.75 0 0 1-1.5 0v-3.5A.75.75 0 0 1 10 5Zm0 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2Z" clip-rule="evenodd"></path>
+                      </svg>
+                    </div>
+                  </div>
+                  <span class="color-negative">Disconnected</span>
+                {{ end }}
+              </li>
+              <li class="flex items-center gap-12">
+                <span class="color-highlight text-truncate block grow">IP</span>
+                {{ if eq $hideIP "true" }}
+                  <span class="text-muted">Redacted</span>
+                {{ else }}
+                  <span>{{ .String "ip" }}</span>
+                {{ end }}
+              </li>
+              <li class="flex items-center gap-12">
+                <span class="color-highlight text-truncate block grow">Geo</span>
+                <span>{{ .String "geo.city" }}, {{ .String "geo.country" }}</span>
+              </li>
+            {{ end }}
+            </ul>

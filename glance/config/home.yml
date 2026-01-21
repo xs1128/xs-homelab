@@ -1,0 +1,489 @@
+- name: Home
+  # Optionally, if you only have a single page you can hide the desktop navigation for a cleaner look
+  # hide-desktop-navigation: true
+  columns:
+    - size: small
+      widgets:
+        - type: custom-api
+          title: Duolingo Stats
+          cache: 5m
+          url: https://www.duolingo.com/2023-05-23/users/${DUO_USER_ID}?fields=streak,streakData
+          headers:
+            Authorization: Bearer ${DUO_JWT_TOKEN}
+          template: |
+            <ul class="list list-gap-14 collapsible-container">
+              <li class="separator margin-top-10 margin-bottom-10"></li>
+              <li class="flex items-center gap-12">
+                <div class="flex items-center justify-center shrink-0" style="width: 24px; height: 24px;">
+                  {{ if eq (.JSON.String "streakData.currentStreak.lastExtendedDate") "2026-01-18" }}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M20 6L9 17L4 12" stroke="#4CAF50" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  {{ else }}
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <circle cx="12" cy="12" r="10" stroke="#FF9600" stroke-width="2"/>
+                      <path d="M12 8V12M12 16H12.01" stroke="#FF9600" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  {{ end }}
+                </div>
+                <span class="color-highlight text-truncate block grow font-medium" style="line-height: 24px;">Daily Status</span>
+                <span class="font-bold {{ if eq (.JSON.String "streakData.currentStreak.lastExtendedDate") "2026-01-18" }}color-success{{ else }}color-warning{{ end }}" style="line-height: 24px;">
+                  {{ if eq (.JSON.String "streakData.currentStreak.lastExtendedDate") "2026-01-18" }}Finished{{ else }}Pending{{ end }}
+                </span>
+              </li>
+              <li class="flex items-center gap-12">
+                <div class="flex items-center justify-center shrink-0" style="width: 24px; height: 24px;">
+                  <svg width="20" height="20" viewBox="0 0 16 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.77271 0.532617C7.336 -0.177539 8.414 -0.177539 8.97729 0.532616L14.0623 6.94342C15.1193 8.23421 15.75 9.86374 15.75 11.6351C15.75 15.8233 12.2242 19.2185 7.875 19.2185C3.52576 19.2185 0 15.8233 0 11.6351C0 11.3414 0.0173457 11.0515 0.0511046 10.7664L0.0333507 4.37841C0.0307386 3.43858 0.542464 2.74527 1.41725 2.89269C1.59157 2.92207 1.9601 3.0331 2.12522 3.12149L3.94611 4.09617L6.77271 0.532617Z" fill="#FF9600"/>
+                    <path d="M8.40677 8.24144C8.1299 7.86443 7.5667 7.86443 7.28982 8.24144L5.30202 10.9482C5.28343 10.9735 5.2689 11 5.25814 11.027C4.7842 11.5866 4.5 12.3011 4.5 13.0796C4.5 14.8745 6.01104 16.3296 7.875 16.3296C9.73896 16.3296 11.25 14.8745 11.25 13.0796C11.25 12.2008 10.8878 11.4035 10.2993 10.8185L8.40677 8.24144Z" fill="#FFC800"/>
+                  </svg>
+                </div>
+                <span class="color-highlight text-truncate block grow font-medium" style="line-height: 24px;">Streak</span>
+                <span class="font-bold text-large color-warning" style="line-height: 24px;">{{ .JSON.Int "streak" }} days</span>
+              </li>
+            </ul>
+
+
+        - type: calendar
+          first-day-of-week: monday
+
+        - type: weather
+          location: ${WEATHER_LOCATION}
+          units: metric # alternatively "imperial"
+          hour-format: 24h # alternatively "24h"
+          # Optionally hide the location from being displayed in the widget
+          # hide-location: true
+
+        - type: custom-api
+          title: Weather Forecast
+          body-type: string
+          cache: 1h
+          options:
+            location: ${WEATHER_LOCATION} 
+          template: | 
+            {{/* THESE VALUES CAN BE CHANGED BY ADDING AN ENTRY TO THE OPTIONS SECTION */}}
+              {{ $temp_unit := .Options.StringOr "temp_unit" "celsius" }}
+              {{ $weekend_color := .Options.StringOr "weekend_color" "var(--color-separator)" }}
+              {{ $overlay_color := .Options.StringOr "overlay_color" "hsl(var(--bghs), var(--bgl), 50%)" }}
+              {{/* the following variables define the coloring of the sunny/cloudy/etc. weather icons*/}}
+                {{ $color_clear := .Options.StringOr "color_clear" "var(--color-text-highlight)" }}
+                {{ $color_partly := .Options.StringOr "color_partly" "var(--color-text-highlight)"}}
+                {{ $color_cloud := .Options.StringOr "color_cloud" "var(--color-text-highlight)"}}
+                {{ $color_smog := .Options.StringOr "color_smog" "var(--color-text-highlight)"}}
+                {{ $color_drizzle := .Options.StringOr "color_drizzle" "var(--color-text-highlight)"}}
+                {{ $color_rain := .Options.StringOr "color_rain" "var(--color-text-highlight)"}}
+                {{ $color_freezing_rain := .Options.StringOr "color_freezing_rain" "var(--color-text-highlight)"}}
+                {{ $color_snow := .Options.StringOr "color_snow" "var(--color-text-highlight)F"}}
+                {{ $color_thunderstorm := .Options.StringOr "color_thunderstorm" "var(--color-text-highlight)"}}
+                {{ $color_other := .Options.StringOr "color_other" "var(--color-text-highlight)"}}
+              {{/* the following variables define the temperature gradient coloring for the daily rectangles */}}
+              {{ $color_red := .Options.StringOr "color_red" "var(--color-negative)" }}  
+              {{ $color_yellow := .Options.StringOr "color_yellow" "var(--color-text-subdue)" }}
+              {{ $color_blue := .Options.StringOr "color_blue" "var(--color-positive)" }}
+              {{ $color_white := .Options.StringOr "color_white" "var(--color-text-highlight)" }}
+              {{ $temp_red := .Options.FloatOr "temp_red" 27 }}
+              {{ $temp_yellow := .Options.FloatOr "temp_yellow" 20 }}
+              {{ $temp_blue := .Options.FloatOr "temp_blue" 10.0 }}
+              {{ $temp_white := .Options.FloatOr "temp_white" 0 }}
+              {{ if eq $temp_unit "fahrenheit" }}
+                {{ $temp_red = .Options.FloatOr "temp_red" 80.0 }}
+                {{ $temp_yellow = .Options.FloatOr "temp_yellow" 70.0 }}
+                {{ $temp_blue = .Options.FloatOr "temp_blue" 50.0 }}
+                {{ $temp_white = .Options.FloatOr "temp_white" 30.0 }}
+              {{end}}
+
+            {{/* Request 1: get latitude and longitude for user's city */}}
+            {{ $location_string := replaceAll " " "%20" (.Options.StringOr "location" "") }}
+            {{ $url1 := printf "https://geocoding-api.open-meteo.com/v1/search?name=%s&count=20&language=en&format=json" $location_string }}
+            {{ $req1 := newRequest $url1 | getResponse }}
+            {{ $latitude := $req1.JSON.String "results.0.latitude" }}
+            {{ $longitude := $req1.JSON.String "results.0.longitude" }}
+
+            {{/* Request 2: get daily weather forecast based on latitude and longitude */}}
+            {{ $url2 := printf "https://api.open-meteo.com/v1/forecast?latitude=%s&longitude=%s&temperature_unit=%s&daily=temperature_2m_max,temperature_2m_min,weathercode&timezone=America/New_York" $latitude $longitude $temp_unit}}    
+            {{ $req2 := newRequest $url2 | getResponse }}
+
+            <div style="display: flex; justify-content: center; align-items: center; flex-direction: column;">
+            
+              {{/* Show abbreivated day of week */}}
+              {{ $dates := $req2.JSON.Array "daily.time" }}
+              <div style="position: relative; width: 100%; height: 25px;">  
+                {{ range $index, $date := $dates }}
+
+                  {{/* prepare to print M Tu W Th F Sa Su */}}
+                  {{ $dateString := .String "" }}
+                  {{ $parsedDate := $dateString | parseTime "DateOnly" }}
+                  {{ $dayOfWeek := $parsedDate.Format "Monday" | trimSuffix "day" | trimSuffix "on" | trimSuffix "es" | trimSuffix "edn" | 
+                      trimSuffix "urs" | trimSuffix "ri" | trimSuffix "tur" | trimSuffix "n" }}  
+                  
+                  {{/* highlight weekends (Sa Su) */}}
+                  {{ $day_color := "" }}
+                  {{ if eq $dayOfWeek "Sa" "Su" }}
+                    {{ $day_color = $weekend_color }}
+                  {{ end }}
+
+                  <div style="text-align: center; width: 10%; height: 25px; line-height: 25px; margin: 0 10% 0 3%; left: {{ mul $index 14 }}%; position: absolute; background-color: {{ $day_color | safeCSS }} ">
+                    <p class="size-h4 color-paragraph">{{ $dayOfWeek }}</p> 
+                  </div>
+                {{ end }}
+              </div>
+
+              {{/* Show numeric day of month */}}
+              <div style="position: relative; width: 100%; height: 25px;">     
+                {{ range $index, $date := $dates }}
+                  {{ $dateString := .String "" }}
+                  {{ $trimmedDate := replaceMatches "[0-9]+-[0-9]+-" "" $dateString }}
+                  <div style="text-align: center; width: 10%; height: 25px; line-height: 25px; margin: 0 10% 0 3%; left: {{ mul $index 14 }}%; position: absolute;">
+                    <p class="size-h4 color-paragraph">{{ $trimmedDate }}</p> 
+                  </div>
+                {{ end }}
+              </div>
+
+              {{/* Show weather conditions using fontawesome icons */}}
+              <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+              {{ $codes := $req2.JSON.Array "daily.weathercode" }}
+
+              <div style="position: relative; width: 100%; height: 30px;">     
+                {{ range $index, $thiscode := $codes }}
+                  {{ $code := .Int "" }}
+
+                  <div style="text-align: center; width: 10%; height: 25px; line-height: 25px; margin: 0 10% 0 3%; left: {{ mul $index 14 }}% ; position: absolute;">
+                  {{ $wtype := "" }} 
+                  {{ $wicon := "" }} 
+                  {{ $wcolor := "" }} 
+                  {{ if eq $code 0 }}
+                    {{ $wtype = "Clear" }}
+                    {{ $wicon = "fas fa-sun" }}
+                    {{ $wcolor = $color_clear }}
+                  {{ else if eq $code 1 2 }}
+                    {{ $wtype = "Part Clear" }}
+                    {{ $wicon = "fas fa-cloud-sun" }}
+                    {{ $wcolor = $color_partly }} 
+                  {{ else if eq $code 3 }}
+                    {{ $wtype = "Cloudy" }}
+                    {{ $wicon = "fas fa-cloud" }}
+                    {{ $wcolor = $color_cloud }}
+                  {{ else if eq $code 45 48 }}
+                    {{ $wtype = "Fog" }}
+                    {{ $wicon = "fas fa-smog" }}
+                    {{ $wcolor = $color_smog }}
+                  {{ else if eq $code 51 53 55 56 57 }}
+                    {{ $wtype = "Drizzle" }}
+                    {{ $wicon = "fas fa-cloud-rain" }}
+                    {{ $wcolor = $color_drizzle }}
+                  {{ else if eq $code 61 63 65 80 81 82 }}
+                    {{ $wtype = "Rain" }}
+                    {{ $wicon = "fas fa-cloud-showers-heavy" }}
+                    {{ $wcolor = $color_rain }}
+                  {{ else if eq $code 66 67 }}
+                    {{ $wtype = "Freezing Rain" }}
+                    {{ $wicon = "fas fa-snowflake" }}
+                    {{ $wcolor = $color_freezing_rain }}
+                  {{ else if eq $code 71 73 75 77 85 86 }}
+                    {{ $wtype = "Snow" }}
+                    {{ $wicon = "fas fa-snowman" }}
+                    {{ $wcolor = $color_snow }}
+                  {{ else if eq $code 95 96 99 }}
+                    {{ $wtype = "Thunderstorm" }}
+                    {{ $wicon = "fas fa-bolt" }}
+                    {{ $wcolor = $color_thunderstorm }}
+                  {{ else }}
+                    {{ $wtype = "Other" }}
+                    {{ $wicon = "fa-solid fa-question" }}
+                    {{ $wcolor = $color_other }}
+                  {{ end }}
+                  <i class={{ $wicon }} style="font-size: 20px; color: {{ $wcolor | safeCSS }};", title = {{$wtype }}></i>
+                  </div>
+                {{ end }}
+              </div>
+            </div>
+
+            {{/* ===== show daily min and max temperatures ===== */}}
+            {{ $maxTemps := $req2.JSON.Array "daily.temperature_2m_max" }}
+            {{ $minTemps := $req2.JSON.Array "daily.temperature_2m_min" }} 
+
+            {{/* get overall max and min temp over week's range */}}
+            {{/* to determine vertical scale */}}
+            <div style="display: flex; justify-content: flex-start; align-items: center;">
+
+              {{ $max_max := 0 }}
+              {{ range $maxTemps }}
+                  {{ if gt (.Int "") $max_max }}
+                    {{ $max_max = (.Int "") }}
+                  {{ end }}
+              {{ end }}
+              {{ $min_min := 999 }}
+              {{ range $minTemps }}
+                  {{ if lt (.Int "") $min_min }}
+                    {{ $min_min = (.Int "") }}
+                  {{ end }}
+              {{ end }}
+              
+              {{/* add a small buffer */}}
+              {{ $max_max = add $max_max 1 }}
+              {{ $min_min = sub $min_min 1 }}
+
+              {{/* outer div to contain the temp chart */}}
+              <div style="position: relative; width: 100%; height: 75px;">
+                {{/* get relative % heights for each daily max and min */}}
+                {{ $temp_range := sub $max_max $min_min }}
+
+                {{ range $index, $thisHigh := $maxTemps }}
+                    {{ $thisLow := index $minTemps $index }}
+                    {{ $thisHigh = $thisHigh.Float "" }}
+                    {{ $thisLow = $thisLow.Float "" }}
+
+                    {{ $thisHighPct := sub 1 (div (sub $max_max $thisHigh) $temp_range) }}
+                    {{ $thisLowPct := div (sub $thisLow $min_min) $temp_range }}
+
+                    {{/* define color gradient per. values between $temp_red and $temp_yellow are shown as a color gradient from $color_red to $color_yellow */}}
+                    {{/* for colors partially in range, can represent as negative percent */}}
+                    {{ $thisTempRange := sub $thisHigh $thisLow }}
+                    {{ $red_pos := mul 100 (div (sub $thisHigh $temp_red) $thisTempRange) | toInt }}
+                    {{ $yel_pos := mul 100 (div (sub $thisHigh $temp_yellow) $thisTempRange) | toInt }}
+                    {{ $blu_pos := mul 100 (div (sub $thisHigh $temp_blue) $thisTempRange) | toInt }}
+                    {{ $whi_pos := mul 100 (div (sub $thisHigh $temp_white) $thisTempRange) | toInt }}
+                    {{ $gradient_string := printf "%s %d%%, %s %d%%, %s %d%%, %s %d%%" $color_red $red_pos $color_yellow $yel_pos $color_blue $blu_pos $color_white $whi_pos }}
+
+                    {{/* output daily div */}}
+                    <div style="left: {{ mul $index 14 | add 3 }}%; bottom: {{ mul $thisLowPct 100 | toInt }}%; 
+                      height: {{ mul (sub $thisHighPct $thisLowPct) 100 | toInt }}%; position: absolute;
+                      background:linear-gradient({{ $gradient_string | safeCSS }}); width: 10%; text-align: center; border-radius: 10px;">
+
+                      {{/* Based on rectangle height & position, print high and low temperatures either inside or outside the rectangle. */}}
+                      {{ $top_pos := -2 }}
+                      {{ $bot_pos := -2 }}
+                      {{ $pos_thresh := 0.20 }}
+                      {{ if lt (div $thisTempRange $temp_range) $pos_thresh }} 
+                        {{ $top_pos = -17 }}
+                        {{ $bot_pos = -19 }}
+                      {{ else if and (lt (div $thisTempRange $temp_range) (mul $pos_thresh 2)) (lt (sub 1 $thisHighPct) $thisLowPct) }}
+                        {{ $bot_pos = -19 }}
+                      {{ else if and (lt (div $thisTempRange $temp_range) (mul $pos_thresh 2)) (gt (sub 1 $thisHighPct) $thisLowPct) }}
+                        {{ $top_pos = -17 }}
+                      {{ end }}
+                        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: {{ $overlay_color | safeCSS }}; z-index: 1;  border-radius: 10px;">
+                          <p style='color: #F0F0F0; position: absolute; top: {{ $top_pos }}px; left: 0px; right: 0px'>{{ $thisHigh | toInt }}</p>
+                          <p style='color: #F0F0F0; position: absolute; bottom: {{ $bot_pos }}px; left: 0px; right:0px'>{{ $thisLow | toInt }}</p>
+                        </div>
+                      </div>
+                {{ end }}
+
+              </div>
+            </div>
+
+        - type: custom-api
+          title: Air Quality
+          cache: 10m
+          url: https://api.waqi.info/feed/geo:${LAT};${LON}/?token=${AQI_TOKEN}
+          template: |
+            {{ $aqi := printf "%03s" (.JSON.String "data.aqi") }}
+            {{ $aqiraw := .JSON.String "data.aqi" }}
+            {{ $updated := .JSON.String "data.time.iso" }}
+            {{ $humidity := .JSON.String "data.iaqi.h.v" }}
+            {{ $ozone := .JSON.String "data.iaqi.o3.v" }}
+            {{ $pm25 := .JSON.String "data.iaqi.pm25.v" }}
+            {{ $pressure := .JSON.String "data.iaqi.p.v" }}
+
+            <div class="flex justify-between">
+              <div class="size-h5">
+                {{ if le $aqi "050" }}
+                  <div class="color-positive">Good air quality</div>
+                {{ else if le $aqi "100" }}
+                  <div class="color-primary">Moderate air quality</div>
+                {{ else }}
+                  <div class="color-negative">Bad air quality</div>
+                {{ end }}
+              </div>
+            </div>
+
+            <div class="color-highlight size-h2">AQI: {{ $aqiraw }}</div>
+            <div style="border-bottom: 1px solid; margin-block: 10px;"></div>
+
+            <div class="margin-block-2">
+              <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+
+                <div>
+                  <div class="size-h3 color-highlight">{{ $humidity }}%</div>
+                  <div class="size-h6">HUMIDITY</div>
+                </div>
+
+                <div>
+                  <div class="size-h3 color-highlight">{{ $ozone }} μg/m³</div>
+                  <div class="size-h6">OZONE</div>
+                </div>
+
+                <div>
+                  <div class="size-h3 color-highlight">{{ $pm25 }} μg/m³</div>
+                  <div class="size-h6">PM2.5</div>
+                </div>
+
+                <div>
+                  <div class="size-h3 color-highlight">{{ $pressure }} hPa</div>
+                  <div class="size-h6">PRESSURE</div>
+                </div>
+
+              </div>
+
+              <div class="size-h6" style="margin-top: 10px;">Last Updated at {{ slice $updated 11 16 }}</div>
+            </div>
+
+    - size: full
+      widgets: 
+        - type: group
+          widgets:
+            # 1. GLOBAL NEWS
+            - type: rss
+              title: "GLOBAL"
+              collapse-after: 3
+              show-thumbnails: true
+              feeds:
+                - url: http://feeds.bbci.co.uk/news/world/rss.xml
+                  title: "BBC World"
+                - url: https://www.aljazeera.com/xml/rss/all.xml
+                  title: "Al Jazeera"
+                - url: https://www.theguardian.com/world/rss
+                  title: "The Guardian"
+
+            # 2. MSIA NEWS
+            - type: rss
+              title: "MSIA"
+              collapse-after: 3
+              show-thumbnails: true
+              feeds:
+                - url: https://www.malaymail.com/feed/rss/malaysia
+                  title: "Malay Mail"
+                - url: https://www.thestar.com.my/rss/tech/tech-news
+                  title: "The Star (Tech)"
+                - url: https://www.freemalaysiatoday.com/feed/
+                  title: "Free Malaysia Today"
+
+            # 3. JAPAN & LANGUAGE
+            - type: rss
+              title: "JAPAN"
+              collapse-after: 3
+              show-thumbnails: true
+              feeds:
+                - url: https://www.japantimes.co.jp/feed/
+                  title: "The Japan Times"
+                - url: https://japantoday.com/feed
+                  title: "Japan Today"
+                - url: https://tofugu.com/feed.xml
+                  title: "Tofugu (Learning)"
+                - url: https://soranews24.com/feed/
+                  title: "SoraNews24 (Culture/Fun)"
+
+            - type: reddit
+              subreddit: malaysia
+              show-thumbnails: true
+            - type: reddit
+              subreddit: LearnJapanese
+              show-thumbnails: true
+            - type: reddit
+              subreddit: japanlife
+              show-thumbnails: true
+
+        - type: videos
+          title: "Geek-y"
+          channels:
+            - UCXuqSBlHAE6Xw-yeJA0Tunw # Linus Tech Tips
+            - UCsBjURrPoezykLs9EqgamOA # Fireship
+            - UCBJycsmduvYEL83R_U4JriQ # Marques Brownlee
+            - UCR-DXc1voovS8nhAvccRZhg # Jeff Geerling
+
+        - type: videos
+          title: "XPLORE"
+          collapse-after: 5
+          channels:
+            - UC6n8I1UDTKP1IWjQMg6_TwA # The B1M (Construction & Architecture)
+            - UCR1IuLEqb6UEA_zQ81kwXfg # Real Engineering (Mech/Civil Engineering)
+            - UC1LpsuAUaKoMzzJSEt5WImw # Asianometry (Business History & Supply Chains)
+            - UCpa-Zb0ZcQjTCPP1Dx_1M8Q # LegalEagle (Law & Courtroom Analysis)
+            - UCJquYOG5EL82sKTfH9aMA9Q # Rick Beato (Music Theory & Industry)
+            - UCJkMlOu7faDgqh4PfzbpLdg # Nerdwriter1 (Art, Film & Essays)
+            - UCYO_jab_esuFRV4b17AJtAw # 3Blue1Brown (Visual Mathematics)
+
+        - type: group
+          widgets: 
+            - type: rss
+              title: "DevOps & CI/CD"
+              collapse-after: 3
+              feeds:
+                - url: https://kubernetes.io/feed.xml
+                  title: "Kubernetes"
+                - url: https://devops.com/feed/
+                  title: "DevOps.com"
+                - url: https://www.jeffgeerling.com/blog.xml
+                  title: "Jeff Geerling"
+                - url: https://martinfowler.com/feed.atom
+                  title: "Martin Fowler"
+
+            - type: rss
+              title: "Tech Industry"
+              collapse-after: 3
+              feeds:
+                - url: https://news.ycombinator.com/rss
+                  title: "Hacker News"
+                - url: https://arstechnica.com/feed/
+                  title: "Ars Technica"
+                - url: https://www.theverge.com/rss/index.xml
+                  title: "The Verge"
+
+            - type: rss
+              title: "AI"
+              collapse-after: 3
+              feeds:
+                - url: https://openai.com/blog/rss.xml
+                  title: "OpenAI Blog"
+                - url: https://huggingface.co/blog/feed.xml
+                  title: "Hugging Face"
+                - url: https://thegradient.pub/rss/
+                  title: "The Gradient"
+
+            - type: reddit
+              subreddit: devops
+              show-thumbnails: true
+            - type: reddit
+              subreddit: technology
+              show-thumbnails: true
+            - type: reddit
+              subreddit: selfhosted
+              show-thumbnails: true
+
+    - size: small
+      widgets: 
+        - type: markets
+          markets:
+            - symbol: USDMYR=X
+              name: USD -> MYR
+            - symbol: SGDMYR=X
+              name: SGD -> MYR
+            - symbol: MYRTWD=X
+              name: MYR -> TWD
+            - symbol: MYRJPY=X
+              name: MYR to JPY
+            - symbol: CSPX.L
+              name: S&P 500 (iShares)
+
+        - type: custom-api
+          title: xkcd
+          cache: 2m
+          url: https://xkcd.com/info.0.json
+          template: | 
+            <body> {{ .JSON.String "title" }}</body>
+            <img src="{{ .JSON.String "img" }}"></img>
+
+        - type: custom-api
+          title: Random Fact
+          cache: 3h
+          url: https://uselessfacts.jsph.pl/api/v2/facts/random
+          template: |
+            <p class="size-h4 color-paragraph">{{ .JSON.String "text" }}</p>
+
+        - type: custom-api
+          title: Random Bible Verse
+          cache: 3h
+          url: https://bible-api.com/data/web/random
+          template: |
+            <p class="size-h2 color-highlight">{{ .JSON.String "random_verse.book" }} {{ .JSON.String "random_verse.chapter" }}:{{ .JSON.String "random_verse.verse" }}</p>
+            <p class="size-h4 color-paragraph">{{ .JSON.String "random_verse.text" }}</p>
