@@ -1,0 +1,17 @@
+services:
+    speedtest-tracker:
+        image: lscr.io/linuxserver/speedtest-tracker:latest
+        restart: unless-stopped
+        container_name: speedtest-tracker
+        ports:
+            - 8081:80
+            - 8443:443
+        environment:
+            - PUID=501 
+            - PGID=20
+            - APP_KEY="base64:iFRk4B4LAEosVUfZuFFtdu5dJbmn5ZFSjDZUPP8wXjE="
+            - APP_URL="http://localhost:8081"
+            - DB_CONNECTION=sqlite
+        volumes:
+            - ./data:/config
+            # - /path/to-custom-ssl-keys:/config/keys
