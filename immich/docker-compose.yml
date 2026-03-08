@@ -30,6 +30,16 @@ services:
     restart: always
     healthcheck:
       disable: false
+    networks:
+      - default
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.immich.rule=Host(`immich.xsooi.com`)"
+      - "traefik.http.routers.immich.entrypoints=websecure"
+      - "traefik.http.routers.immich.tls=true"
+      - "traefik.http.routers.immich.tls.certresolver=myresolver"
+      - "traefik.http.services.immich.loadbalancer.server.port=2283"
 
   immich-machine-learning:
     container_name: immich_machine_learning
@@ -72,3 +82,7 @@ services:
 
 volumes:
   model-cache:
+
+networks:
+  proxy:
+    external: true

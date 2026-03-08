@@ -12,3 +12,4 @@ data
 # immich
 library
 postgres
+acme*

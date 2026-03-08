@@ -3,19 +3,53 @@ services:
   prometheus:
     container_name: prometheus
     image: prom/prometheus:latest
+    networks:
+      - proxy
+      - default 
+    env_file:
+      - .env
     command:
       - "--config.file=/etc/prometheus/prometheus.yml"
-      - '--storage.tsdb.path=data/'
-    ports:
-      - "9090:9090"
+      - "--storage.tsdb.path=data/"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus-data:/prometheus
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.prometheus.rule=Host(`prometheus.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.prometheus.entrypoints=websecure"
+      - "traefik.http.routers.prometheus.tls=true"
+      - "traefik.http.routers.prometheus.tls.certresolver=myresolver"
+      - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+      - "traefik.docker.network=proxy"
     restart: unless-stopped
+
+  grafana:
+     image: grafana/grafana-enterprise
+     container_name: grafana
+     restart: unless-stopped
+     networks:
+      - proxy
+      - default
+     environment:
+       # - GF_SERVER_ROOT_URL=http://my.grafana.server/
+       - GF_PLUGINS_PREINSTALL=grafana-clock-panel
+     labels:
+       - "traefik.enable=true"
+       - "traefik.http.routers.grafana.rule=Host(`grafana.${DOMAIN_NAME}`)"
+       - "traefik.http.routers.grafana.entrypoints=websecure"
+       - "traefik.http.routers.grafana.tls=true"
+       - "traefik.http.routers.grafana.tls.certresolver=myresolver"
+       - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+       - "traefik.docker.network=proxy"
+     volumes:
+       - '$PWD/data:/var/lib/grafana'
 
   node-exporter:
     image: prom/node-exporter:latest
     container_name: node-exporter
+    networks:
+      - default
     restart: unless-stopped
     volumes:
       - /proc:/host/proc:ro
@@ -26,27 +60,17 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-    ports:
-      - "9100:9100"
   
   blackbox-exporter:
     image: prom/blackbox-exporter:latest
     container_name: blackbox-exporter
-    ports:
-      - "9115:9115"
+    networks:
+      - default
     restart: unless-stopped
 
-  grafana:
-    image: grafana/grafana-enterprise
-    container_name: grafana
-    restart: unless-stopped
-    environment:
-      # - GF_SERVER_ROOT_URL=http://my.grafana.server/
-      - GF_PLUGINS_PREINSTALL=grafana-clock-panel
-    ports:
-      - '3000:3000'
-    volumes:
-      - '$PWD/data:/var/lib/grafana'
+networks:
+  proxy:
+    external: true
 
 volumes:
   prometheus-data:

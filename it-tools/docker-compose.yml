@@ -2,23 +2,18 @@ services:
   it-tools:
     image: corentinth/it-tools:latest
     container_name: it-tools
+    env_file: .env
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.it-tools.rule=Host(`tools.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.it-tools.entrypoints=websecure"
+      - "traefik.http.routers.it-tools.tls=true"
+      - "traefik.http.routers.it-tools.tls.certresolver=myresolver"
+      - "traefik.http.services.it-tools.loadbalancer.server.port=80"
     restart: unless-stopped
 
-  caddy:
-    image: serfriz/caddy-cloudflare-ddns:latest
-    container_name: caddy
-    restart: unless-stopped
-    ports:
-      - "80:80"
-      - "443:443/tcp"
-      - "443:443/udp"
-    env_file:
-      - .env
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile
-      - caddy_data:/data
-      - caddy_config:/config
-
-volumes:
-  caddy_data:
-  caddy_config:
+networks:
+  proxy:
+    external: true

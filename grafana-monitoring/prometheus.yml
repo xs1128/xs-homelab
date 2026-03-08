@@ -17,15 +17,15 @@ scrape_configs:
       module: [http_2xx]
     static_configs:
       - targets:
-        - ${PROBE_TARGET}
+        - https://me.xsooi.com
     relabel_configs:
       - source_labels: [__address__]
         target_label: __param_target
       - source_labels: [__param_target]
         target_label: instance
       - target_label: __address__
-        replacement: ${BLACKBOX_REPLACEMENT}
+        replacement: 'blackbox-exporter:9115'
 
   - job_name: 'blackbox_exporter'
     static_configs:
-      - targets: ['${BLACKBOX_TARGET}']
+      - targets: ['blackbox-exporter:9115']
