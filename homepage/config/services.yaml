@@ -1,0 +1,22 @@
+---
+# For configuration options and examples, please see:
+# https://gethomepage.dev/configs/services/
+
+- Media:
+    - Immich:
+        href: http://140.114.203.77:2283
+        description: Image storage and backup
+    - Jellyfin:
+        href: http://140.114.203.77:8096
+        description: Media storage and hosting
+
+- Monitoring:
+    - Grafana:
+        href: http://140.114.203.77:3000
+        description: Dashboard for all sorts
+    - Prometheus:
+        href: http://140.114.203.77:9090
+        description: Monitoring tools and provide data to frontend
+    - What's up Docker:
+        href: http://140.114.203.77:3001
+        description: Monitor all running containers``
