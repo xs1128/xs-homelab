@@ -1,0 +1,27 @@
+services:
+    portainer-ce:
+        image: 'portainer/portainer-ce:lts'
+        volumes:
+            - 'portainer_data:/data'
+            - '/var/run/docker.sock:/var/run/docker.sock'
+        restart: always
+        container_name: portainer
+        # ports:
+        #     - '9443:9443'
+        #     - '8000:8000'
+        networks:
+          - proxy
+        labels:
+          - "traefik.enable=true"
+          - "traefik.http.routers.portainer.rule=Host(`port.${DOMAIN_NAME}`)"
+          - "traefik.http.routers.portainer.entrypoints=websecure"
+          - "traefik.http.routers.portainer.tls=true"
+          - "traefik.http.routers.portainer.tls.certresolver=myresolver"
+          - "traefik.http.services.portainer.loadbalancer.server.port=9000"
+
+networks:
+  proxy:
+    external: true
+
+volumes:
+  portainer_data:
