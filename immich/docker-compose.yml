@@ -35,7 +35,7 @@ services:
       - proxy
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.immich.rule=Host(`immich.xsooi.com`)"
+      - "traefik.http.routers.immich.rule=Host(`immich.${DOMAIN_NAME}`)"
       - "traefik.http.routers.immich.entrypoints=websecure"
       - "traefik.http.routers.immich.tls=true"
       - "traefik.http.routers.immich.tls.certresolver=myresolver"
