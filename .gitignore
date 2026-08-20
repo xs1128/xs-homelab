@@ -15,3 +15,5 @@ postgres
 acme*
 gitlab/logs
 gitlab/config
+# forgejo (bind-mounted /data: ssh host keys, jwt keys, app.ini secrets, repos)
+forgejo/forgejo

@@ -1,0 +1,21 @@
+# docker-compose.yml
+services:
+  convertx:
+    image: ghcr.io/c4illin/convertx
+    container_name: convertx
+    restart: unless-stopped
+    volumes:
+      - ./data:/app/data
+    networks:
+      - proxy
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.convertx.rule=Host(`convert.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.convertx.entrypoints=websecure"
+      - "traefik.http.routers.convertx.tls=true"
+      - "traefik.http.routers.convertx.tls.certresolver=myresolver"
+      - "traefik.http.services.convertx.loadbalancer.server.port=3000"
+
+networks:
+  proxy:
+    external: true
