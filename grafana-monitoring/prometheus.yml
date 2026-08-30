@@ -5,11 +5,34 @@ global:
 scrape_configs:
   - job_name: 'prometheus'
     static_configs:
-      - targets: ['${PROMETHEUS_TARGET}']
+      - targets: ['prometheus:9090']
 
   - job_name: 'node'
     static_configs:
-      - targets: ['${NODE_TARGET}']
+      - targets: ['node-exporter:9100']
+        labels:
+          device_id: mini-orbstack-vm
+          platform: linux
+          role: container-runtime
+
+  - job_name: 'mini-macos'
+    static_configs:
+      - targets: ['host.docker.internal:9102']
+        labels:
+          role: host
+
+  - job_name: 'external-volume'
+    static_configs:
+      - targets: ['host.docker.internal:9104']
+        labels:
+          role: host
+          platform: darwin
+
+  - job_name: 'mac-power'
+    static_configs:
+      - targets: ['host.docker.internal:9103']
+        labels:
+          role: host
 
   - job_name: 'blackbox'
     metrics_path: /probe

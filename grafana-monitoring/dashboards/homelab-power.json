@@ -1,0 +1,450 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 0 },
+      "id": 100,
+      "panels": [],
+      "title": "Overview",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 1,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "#EAB839", "value": 15 },
+              { "color": "red", "value": 30 }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 5, "x": 0, "y": 1 },
+      "id": 1,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_total_watts{device_id=\"mini\"})",
+          "legendFormat": "Total",
+          "refId": "A"
+        }
+      ],
+      "description": "Estimated system power: SoC package power plus a fixed 3.8 W allowance for PSU losses, memory, storage, networking, and cooling.",
+      "title": "Estimated Power",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "description": "MODELED = CPU-utilization model because powermetrics permission is unavailable. LIVE = powermetrics package readings. The exporter retries LIVE mode every 60 seconds.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "mappings": [
+            {
+              "options": { "0": { "text": "MODELED" }, "1": { "text": "LIVE" } },
+              "type": "value"
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "#EAB839", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          },
+          "unit": "none"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 5, "x": 5, "y": 1 },
+      "id": 2,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max(mac_power_source{device_id=\"mini\", source=\"powermetrics\"}) or vector(0)",
+          "legendFormat": "Mode",
+          "refId": "A"
+        }
+      ],
+      "title": "Power Source",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "description": "SoC package power. Modeled from CPU utilization in MODELED mode; read from powermetrics in LIVE mode.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "#EAB839", "value": 10 },
+              { "color": "red", "value": 20 }
+            ]
+          },
+          "unit": "watt"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 5, "x": 10, "y": 1 },
+      "id": 3,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_package_watts{device_id=\"mini\"})",
+          "legendFormat": "Package",
+          "refId": "A"
+        }
+      ],
+      "title": "SoC Package",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "description": "Projected daily energy at the trailing 24-hour average estimated power. This is not a revenue-grade meter reading.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 2,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "watth"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 4, "x": 15, "y": 1 },
+      "id": 4,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "avg_over_time((max by (device_id) (mac_power_total_watts{device_id=\"mini\"}))[24h:15s]) * 24",
+          "legendFormat": "24h",
+          "refId": "A"
+        }
+      ],
+      "title": "Daily Energy",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "description": "Projected monthly cost from the trailing 24-hour average estimated power at NT$4.09/kWh.",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "decimals": 0,
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "teal", "value": null }]
+          },
+          "unit": "prefix:NT$"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 5, "w": 5, "x": 19, "y": 1 },
+      "id": 5,
+      "options": {
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "orientation": "auto",
+        "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false },
+        "textMode": "auto"
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "avg_over_time((max by (device_id) (mac_power_total_watts{device_id=\"mini\"}))[24h:15s]) * 24 * 30 / 1000 * 4.09",
+          "legendFormat": "NT$/mo",
+          "refId": "A"
+        }
+      ],
+      "title": "Monthly Cost",
+      "type": "stat"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 6 },
+      "id": 101,
+      "panels": [],
+      "title": "Power Trends",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 25,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "normal" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "watt"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byName", "options": "Total (wall)" },
+            "properties": [
+              { "id": "custom.stacking", "value": { "group": "B", "mode": "none" } },
+              { "id": "custom.fillOpacity", "value": 0 },
+              { "id": "custom.lineWidth", "value": 3 },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#2dd4bf" } }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 12, "w": 24, "x": 0, "y": 7 },
+      "id": 6,
+      "options": {
+        "legend": { "calcs": ["mean", "max", "lastNotNull"], "displayMode": "table", "placement": "right", "showLegend": true, "width": 360 },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_cpu_watts{device_id=\"mini\"})",
+          "legendFormat": "CPU",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_gpu_watts{device_id=\"mini\"})",
+          "legendFormat": "GPU",
+          "refId": "B"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_ane_watts{device_id=\"mini\"})",
+          "legendFormat": "ANE",
+          "refId": "C"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_baseline_watts{device_id=\"mini\"})",
+          "legendFormat": "System baseline",
+          "refId": "D"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_total_watts{device_id=\"mini\"})",
+          "legendFormat": "Total (wall)",
+          "refId": "E"
+        }
+      ],
+      "title": "Power Breakdown",
+      "type": "timeseries"
+    },
+    {
+      "collapsed": false,
+      "gridPos": { "h": 1, "w": 24, "x": 0, "y": 19 },
+      "id": 102,
+      "panels": [],
+      "title": "System Detail",
+      "type": "row"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "watt"
+        },
+        "overrides": [
+          {
+            "matcher": { "id": "byRegexp", "options": "/util.*/" },
+            "properties": [
+              { "id": "unit", "value": "percent" },
+              { "id": "custom.axisPlacement", "value": "right" },
+              { "id": "color", "value": { "mode": "fixed", "fixedColor": "#888" } },
+              { "id": "custom.fillOpacity", "value": 0 }
+            ]
+          }
+        ]
+      },
+      "gridPos": { "h": 11, "w": 12, "x": 0, "y": 20 },
+      "id": 7,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id, cluster) (mac_power_cluster_watts{device_id=\"mini\"})",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (mac_power_cpu_util_percent{device_id=\"mini\"})",
+          "legendFormat": "util (CPU %)",
+          "refId": "B"
+        }
+      ],
+      "title": "CPU Clusters (powermetrics mode)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": { "type": "prometheus", "uid": "prom" },
+      "description": "Host CPU and memory from the existing monitor-agent (job mini-macos).",
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "palette-classic" },
+          "custom": {
+            "axisCenteredZero": false,
+            "axisColorMode": "text",
+            "axisLabel": "",
+            "axisPlacement": "auto",
+            "barAlignment": 0,
+            "drawStyle": "line",
+            "fillOpacity": 15,
+            "gradientMode": "opacity",
+            "hideFrom": { "legend": false, "tooltip": false, "viz": false },
+            "lineInterpolation": "smooth",
+            "lineWidth": 2,
+            "pointSize": 5,
+            "scaleDistribution": { "type": "linear" },
+            "showPoints": "never",
+            "spanNulls": true,
+            "stacking": { "group": "A", "mode": "none" },
+            "thresholdsStyle": { "mode": "off" }
+          },
+          "mappings": [],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          },
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": { "h": 11, "w": 12, "x": 12, "y": 20 },
+      "id": 8,
+      "options": {
+        "legend": { "calcs": ["mean", "max"], "displayMode": "table", "placement": "bottom", "showLegend": true },
+        "tooltip": { "mode": "multi", "sort": "desc" }
+      },
+      "targets": [
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (device_cpu_utilization_percent{device_id=\"mini\"})",
+          "legendFormat": "CPU",
+          "refId": "A"
+        },
+        {
+          "datasource": { "type": "prometheus", "uid": "prom" },
+          "expr": "max by (device_id) (device_memory_utilization_percent{device_id=\"mini\"})",
+          "legendFormat": "Memory",
+          "refId": "B"
+        }
+      ],
+      "title": "Host CPU / Memory (monitor-agent)",
+      "type": "timeseries"
+    }
+  ],
+  "refresh": "30s",
+  "schemaVersion": 39,
+  "tags": ["homelab", "power"],
+  "templating": { "list": [] },
+  "time": { "from": "now-6h", "to": "now" },
+  "timepicker": {},
+  "timezone": "Asia/Taipei",
+  "title": "Homelab Power",
+  "uid": "homelab-power",
+  "version": 5,
+  "weekStart": ""
+}

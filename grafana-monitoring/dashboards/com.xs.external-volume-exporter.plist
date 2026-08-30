@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.xs.external-volume-exporter</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/xs/.local/bin/external-volume-exporter</string>
+    <string>-listen</string>
+    <string>0.0.0.0:9104</string>
+    <string>-device-id</string>
+    <string>mini</string>
+    <string>-device-name</string>
+    <string>Mac mini</string>
+    <string>-mountpoint</string>
+    <string>/Volumes/xsExternal</string>
+    <string>-volume</string>
+    <string>xsExternal</string>
+  </array>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>StandardOutPath</key>
+  <string>/Users/xs/Library/Logs/external-volume-exporter.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/xs/Library/Logs/external-volume-exporter.log</string>
+  <key>ProcessType</key>
+  <string>Background</string>
+</dict>
+</plist>

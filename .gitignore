@@ -17,3 +17,17 @@ gitlab/logs
 gitlab/config
 # forgejo (bind-mounted /data: ssh host keys, jwt keys, app.ini secrets, repos)
 forgejo/forgejo
+# paperless-ngx persistent data
+paperless-ngx/data/
+paperless-ngx/media/
+paperless-ngx/export/
+paperless-ngx/consume/
+paperless-ngx/pgdata/
+paperless-ngx/redisdata/
+# Stirling PDF persistent data
+stirling-pdf/stirling-data/
+# ocr (PaddleOCR weights, ~294M, re-downloadable; Dockerfile COPYs models/ at build)
+ocr/models/*.tar
+ocr/models/*.onnx
+ocr/models/*_infer/
+!ocr/models/*.txt

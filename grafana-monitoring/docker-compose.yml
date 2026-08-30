@@ -2,10 +2,10 @@ name: monitoring
 services:
   prometheus:
     container_name: prometheus
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3
     networks:
       - proxy
-      - default 
+      - default
     env_file:
       - .env
     command:
@@ -29,8 +29,8 @@ services:
      container_name: grafana
      restart: unless-stopped
      networks:
-      - proxy
-      - default
+       - proxy
+       - default
      environment:
        # - GF_SERVER_ROOT_URL=http://my.grafana.server/
        - GF_PLUGINS_PREINSTALL=grafana-clock-panel
@@ -44,6 +44,8 @@ services:
        - "traefik.docker.network=proxy"
      volumes:
        - '$PWD/data:/var/lib/grafana'
+       - './provisioning:/etc/grafana/provisioning'
+       - './dashboards:/var/lib/grafana/dashboards'
 
   node-exporter:
     image: prom/node-exporter:latest
@@ -60,7 +62,7 @@ services:
       - '--path.rootfs=/rootfs'
       - '--path.sysfs=/host/sys'
       - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
-  
+
   blackbox-exporter:
     image: prom/blackbox-exporter:latest
     container_name: blackbox-exporter
@@ -74,5 +76,3 @@ networks:
 
 volumes:
   prometheus-data:
-  grafana_storage: {}
-
