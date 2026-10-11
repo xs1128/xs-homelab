@@ -1,0 +1,4 @@
+services:
+  stirling-pdf:
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8082}:8080"

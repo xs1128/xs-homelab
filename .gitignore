@@ -1,10 +1,19 @@
 .DS_Store
 .env
+.env.*
+!.env.example
+!.env.*.example
+.claude/settings.local.json
+.local-service-archive/
+volumes/
+node_modules/
+coverage/
+reports/
+.pytest_cache/
+*.pyc
 # wg-show
 __pycache__
 .venv
-.python-version
-pyproject.toml
 *.log
 *.err
 # grafana
@@ -12,7 +21,18 @@ data
 # immich
 library
 postgres
-acme*
+traefik/letsencrypt/
+backup/config.env
+backup/password.txt
+backup/repository/
+backup/.cache/
+backup/.tmp/
+backup/.stage/
+backup/.restore-test.*/
+backup/full-restore/
+backup/last-success.txt
+siyuan/workspace/
+coolify/host-data/
 gitlab/logs
 gitlab/config
 # forgejo (bind-mounted /data: ssh host keys, jwt keys, app.ini secrets, repos)

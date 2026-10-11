@@ -9,7 +9,7 @@ services:
         environment:
             - PUID=501 
             - PGID=20
-            - APP_KEY="base64:iFRk4B4LAEosVUfZuFFtdu5dJbmn5ZFSjDZUPP8wXjE="
+            - APP_KEY=${APP_KEY:?Set APP_KEY in .env}
             - APP_URL="http://localhost:8081"
             - DB_CONNECTION=sqlite
         volumes:

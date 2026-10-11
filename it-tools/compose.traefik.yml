@@ -1,0 +1,16 @@
+services:
+  it-tools:
+    networks:
+      - proxy
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${PROXY_NETWORK:-proxy}"
+      traefik.http.routers.it-tools.rule: "Host(`tools.${DOMAIN_NAME:?Set DOMAIN_NAME in .env}`)"
+      traefik.http.routers.it-tools.entrypoints: websecure
+      traefik.http.routers.it-tools.tls: "true"
+      traefik.http.routers.it-tools.tls.certresolver: myresolver
+      traefik.http.services.it-tools.loadbalancer.server.port: "80"
+networks:
+  proxy:
+    external: true
+    name: "${PROXY_NETWORK:-proxy}"

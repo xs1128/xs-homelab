@@ -1,0 +1,19 @@
+services:
+  webserver:
+    networks:
+      - internal
+      - proxy
+    environment:
+      PAPERLESS_URL: "https://paperless.${DOMAIN_NAME:?Set DOMAIN_NAME in .env}"
+    labels:
+      traefik.enable: "true"
+      traefik.docker.network: "${PROXY_NETWORK:-proxy}"
+      traefik.http.routers.paperless.rule: "Host(`paperless.${DOMAIN_NAME:?Set DOMAIN_NAME in .env}`)"
+      traefik.http.routers.paperless.entrypoints: websecure
+      traefik.http.routers.paperless.tls: "true"
+      traefik.http.routers.paperless.tls.certresolver: myresolver
+      traefik.http.services.paperless.loadbalancer.server.port: "8000"
+networks:
+  proxy:
+    external: true
+    name: "${PROXY_NETWORK:-proxy}"

@@ -1,7 +1,7 @@
+name: xs-homelab-paperless-ngx
 services:
   broker:
     image: docker.io/valkey/valkey:9-alpine
-    container_name: paperless-broker
     restart: unless-stopped
     volumes:
       - ./redisdata:/data
@@ -10,12 +10,11 @@ services:
 
   db:
     image: docker.io/library/postgres:18
-    container_name: paperless-db
     restart: unless-stopped
     environment:
       POSTGRES_DB: paperless
       POSTGRES_USER: paperless
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
     volumes:
       - ./pgdata:/var/lib/postgresql
     networks:
@@ -23,7 +22,6 @@ services:
 
   webserver:
     image: ghcr.io/paperless-ngx/paperless-ngx:latest
-    container_name: paperless
     restart: unless-stopped
     depends_on:
       - db
@@ -34,9 +32,8 @@ services:
       PAPERLESS_DBENGINE: postgresql
       PAPERLESS_DBNAME: paperless
       PAPERLESS_DBUSER: paperless
-      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD}
-      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY}
-      PAPERLESS_URL: https://paperless.${DOMAIN_NAME}
+      PAPERLESS_DBPASS: ${POSTGRES_PASSWORD:?Set POSTGRES_PASSWORD in .env}
+      PAPERLESS_SECRET_KEY: ${PAPERLESS_SECRET_KEY:?Set PAPERLESS_SECRET_KEY in .env}
       PAPERLESS_TIME_ZONE: ${TIME_ZONE:-Asia/Taipei}
       PAPERLESS_OCR_LANGUAGE: ${PAPERLESS_OCR_LANGUAGE:-eng}
     volumes:
@@ -45,19 +42,10 @@ services:
       - ./export:/usr/src/paperless/export
       - ./consume:/usr/src/paperless/consume
     networks:
-      - proxy
+      - default
       - internal
-    labels:
-      - "traefik.enable=true"
-      - "traefik.docker.network=proxy"
-      - "traefik.http.routers.paperless.rule=Host(`paperless.${DOMAIN_NAME}`)"
-      - "traefik.http.routers.paperless.entrypoints=websecure"
-      - "traefik.http.routers.paperless.tls=true"
-      - "traefik.http.routers.paperless.tls.certresolver=myresolver"
-      - "traefik.http.services.paperless.loadbalancer.server.port=8000"
 
 networks:
-  proxy:
-    external: true
+  default: {}
   internal:
     internal: true

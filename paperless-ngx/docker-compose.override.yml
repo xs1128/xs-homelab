@@ -1,0 +1,6 @@
+services:
+  webserver:
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${PORT:-8083}:8000"
+    environment:
+      PAPERLESS_URL: "${PAPERLESS_LOCAL_URL:-http://localhost:8083}"

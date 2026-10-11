@@ -1,0 +1,26 @@
+pipeline {
+  agent { label 'homelab-ci' }
+  options {
+    disableConcurrentBuilds()
+    skipDefaultCheckout()
+    timestamps()
+    timeout(time: 10, unit: 'MINUTES')
+    buildDiscarder(logRotator(numToKeepStr: '20'))
+  }
+  stages {
+    stage('Checkout') {
+      steps {
+        deleteDir()
+        checkout scm
+      }
+    }
+    stage('Validate recipes') {
+      steps {
+        sh 'python3 scripts/validate.py'
+      }
+    }
+  }
+  post {
+    cleanup { deleteDir() }
+  }
+}
