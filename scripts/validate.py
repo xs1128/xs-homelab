@@ -137,8 +137,6 @@ def main():
             "PROXY_NETWORK": "xs-homelab-test-proxy",
             "POSTGRES_PASSWORD": "fixture-only-database-password",
             "PAPERLESS_SECRET_KEY": "fixture-only-application-key",
-            "APP_KEY": "base64:" + "A" * 43 + "=",
-            "GITLAB_HOME": temporary + "/gitlab",
             "UPLOAD_LOCATION": "./library", "DB_DATA_LOCATION": "./postgres",
             "DB_PASSWORD": "fixture-only-immich-password",
             "DB_USERNAME": "postgres", "DB_DATABASE_NAME": "immich",

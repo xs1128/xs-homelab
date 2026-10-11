@@ -33,8 +33,6 @@ backup/full-restore/
 backup/last-success.txt
 siyuan/workspace/
 coolify/host-data/
-gitlab/logs
-gitlab/config
 # forgejo (bind-mounted /data: ssh host keys, jwt keys, app.ini secrets, repos)
 forgejo/forgejo
 # paperless-ngx persistent data
